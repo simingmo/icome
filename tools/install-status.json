@@ -1,0 +1,34 @@
+{
+  "installedAt": "2026-10-01",
+  "root": "tools",
+  "components": {
+    "php": {
+      "path": "tools/php/php.exe",
+      "version": "8.4.26",
+      "status": "installed-and-verified"
+    },
+    "rips": {
+      "path": "tools/rips/main.php",
+      "version": "0.55",
+      "status": "installed-and-syntax-verified",
+      "note": "Legacy web application; wrapper syntax verified, headless vulnerability extraction still requires compatibility validation."
+    },
+    "seay": {
+      "path": "tools/seay-app/Seay源代码审计系统.exe",
+      "version": "2.1",
+      "status": "installed",
+      "note": "Windows GUI application; no verified headless CLI contract."
+    },
+    "vcg": {
+      "path": "tools/vcg-app/VisualCodeGrepper.exe",
+      "version": "2.3.2",
+      "status": "installed",
+      "note": "CLI accepts target/language/export options, but the current wrapper did not produce XML in validation."
+    }
+  },
+  "wrappers": [
+    "tools/rips-wrapper.php",
+    "tools/seay-wrapper.ps1",
+    "tools/vcg-wrapper.ps1"
+  ]
+}

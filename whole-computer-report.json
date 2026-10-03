@@ -1,0 +1,283 @@
+{
+  "schemaVersion": "0.4",
+  "scanner": {
+    "name": "lego-security-scanner",
+    "version": "0.3.0"
+  },
+  "scannedFiles": 0,
+  "executedRules": [
+    "configuration/no-debug-mode",
+    "configuration/no-insecure-cookie",
+    "configuration/no-wildcard-cors",
+    "security/no-cloud-access-key",
+    "security/no-command-injection",
+    "security/no-disabled-tls-verification",
+    "security/no-eval",
+    "security/no-function-constructor",
+    "security/no-hardcoded-secret",
+    "security/no-insecure-deserialization",
+    "security/no-insecure-randomness",
+    "security/no-open-redirect",
+    "security/no-path-traversal",
+    "security/no-private-key",
+    "security/no-sql-injection",
+    "security/no-ssrf",
+    "security/no-weak-hash",
+    "security/no-xss",
+    "testing/no-always-true-assertion",
+    "testing/no-empty-test",
+    "testing/no-focused-test",
+    "testing/no-skipped-test"
+  ],
+  "findings": [],
+  "summary": {
+    "bySeverity": {
+      "info": 0,
+      "low": 0,
+      "medium": 0,
+      "high": 0,
+      "critical": 0
+    },
+    "byCategory": {},
+    "byRule": {},
+    "byStandard": {}
+  },
+  "durationMs": 1526,
+  "status": "partial",
+  "diagnostics": [
+    {
+      "code": "DISCOVERY_PERMISSION_DENIED",
+      "level": "warning",
+      "phase": "discovery",
+      "message": "部分目录无法访问，已跳过：EPERM: operation not permitted, scandir 'C:\\Config.Msi'",
+      "recoverable": true,
+      "details": {
+        "root": "C:\\",
+        "reason": "EPERM"
+      }
+    },
+    {
+      "code": "DISCOVERY_PERMISSION_DENIED",
+      "level": "warning",
+      "phase": "discovery",
+      "message": "部分目录无法访问，已跳过：EPERM: operation not permitted, scandir 'D:\\Config.Msi'",
+      "recoverable": true,
+      "details": {
+        "root": "D:\\",
+        "reason": "EPERM"
+      }
+    },
+    {
+      "code": "DISCOVERY_PERMISSION_DENIED",
+      "level": "warning",
+      "phase": "discovery",
+      "message": "部分目录无法访问，已跳过：EPERM: operation not permitted, scandir 'E:\\System Volume Information'",
+      "recoverable": true,
+      "details": {
+        "root": "E:\\",
+        "reason": "EPERM"
+      }
+    },
+    {
+      "code": "DISCOVERY_PERMISSION_DENIED",
+      "level": "warning",
+      "phase": "discovery",
+      "message": "部分目录无法访问，已跳过：EPERM: operation not permitted, scandir 'F:\\System Volume Information'",
+      "recoverable": true,
+      "details": {
+        "root": "F:\\",
+        "reason": "EPERM"
+      }
+    }
+  ],
+  "metadata": {
+    "target": "C:\\, D:\\, E:\\, F:\\",
+    "startedAt": "2026-10-03T02:01:54.442Z",
+    "finishedAt": "2026-10-03T02:01:54.457Z",
+    "configuration": {
+      "include": [
+        "**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}"
+      ],
+      "exclude": [
+        "**/node_modules/**",
+        "**/.venv/**",
+        "**/venv/**",
+        "**/.venv*/**",
+        "**/venv*/**",
+        "**/env/**",
+        "**/virtualenv*/**",
+        "**/site-packages/**",
+        "**/dist-packages/**",
+        "**/.tox/**",
+        "**/__pycache__/**",
+        "**/*.egg-info/**",
+        "**/bower_components/**",
+        "**/vendor/**",
+        "**/dist/**",
+        "**/build/**",
+        "**/coverage/**",
+        "**/.git/**",
+        "**/tests/**",
+        "**/__tests__/**",
+        "**/test/**",
+        "**/spec/**",
+        "**/*.test.*",
+        "**/*.spec.*"
+      ],
+      "includeTests": false,
+      "standards": []
+    },
+    "roots": [
+      "C:\\",
+      "D:\\",
+      "E:\\",
+      "F:\\"
+    ]
+  },
+  "coverage": {
+    "discoveredFiles": 0,
+    "scannedFiles": 0,
+    "skippedFiles": 0,
+    "failedFiles": 0,
+    "scannedBytes": 0,
+    "byLanguage": {}
+  },
+  "stages": [
+    {
+      "phase": "configuration",
+      "status": "succeeded"
+    },
+    {
+      "phase": "discovery",
+      "status": "partial"
+    },
+    {
+      "phase": "read",
+      "status": "succeeded"
+    },
+    {
+      "phase": "rule",
+      "status": "succeeded"
+    },
+    {
+      "phase": "external-scanner",
+      "status": "succeeded"
+    },
+    {
+      "phase": "configuration",
+      "status": "succeeded"
+    },
+    {
+      "phase": "discovery",
+      "status": "partial"
+    },
+    {
+      "phase": "read",
+      "status": "succeeded"
+    },
+    {
+      "phase": "rule",
+      "status": "succeeded"
+    },
+    {
+      "phase": "external-scanner",
+      "status": "succeeded"
+    },
+    {
+      "phase": "configuration",
+      "status": "succeeded"
+    },
+    {
+      "phase": "discovery",
+      "status": "partial"
+    },
+    {
+      "phase": "read",
+      "status": "succeeded"
+    },
+    {
+      "phase": "rule",
+      "status": "succeeded"
+    },
+    {
+      "phase": "external-scanner",
+      "status": "succeeded"
+    },
+    {
+      "phase": "configuration",
+      "status": "succeeded"
+    },
+    {
+      "phase": "discovery",
+      "status": "partial"
+    },
+    {
+      "phase": "read",
+      "status": "succeeded"
+    },
+    {
+      "phase": "rule",
+      "status": "succeeded"
+    },
+    {
+      "phase": "external-scanner",
+      "status": "succeeded"
+    }
+  ],
+  "modules": [
+    {
+      "id": "@lego-scan/security",
+      "version": "0.3.0",
+      "status": "succeeded",
+      "rules": [
+        "security/no-command-injection",
+        "security/no-eval",
+        "security/no-function-constructor",
+        "security/no-insecure-deserialization",
+        "security/no-insecure-randomness",
+        "security/no-open-redirect",
+        "security/no-path-traversal",
+        "security/no-sql-injection",
+        "security/no-ssrf",
+        "security/no-weak-hash",
+        "security/no-xss"
+      ],
+      "externalScanners": []
+    },
+    {
+      "id": "@lego-scan/credentials",
+      "version": "0.3.0",
+      "status": "succeeded",
+      "rules": [
+        "security/no-cloud-access-key",
+        "security/no-hardcoded-secret",
+        "security/no-private-key"
+      ],
+      "externalScanners": []
+    },
+    {
+      "id": "@lego-scan/configuration",
+      "version": "0.3.0",
+      "status": "succeeded",
+      "rules": [
+        "configuration/no-debug-mode",
+        "configuration/no-insecure-cookie",
+        "configuration/no-wildcard-cors",
+        "security/no-disabled-tls-verification"
+      ],
+      "externalScanners": []
+    },
+    {
+      "id": "@lego-scan/testing",
+      "version": "0.3.0",
+      "status": "succeeded",
+      "rules": [
+        "testing/no-always-true-assertion",
+        "testing/no-empty-test",
+        "testing/no-focused-test",
+        "testing/no-skipped-test"
+      ],
+      "externalScanners": []
+    }
+  ]
+}

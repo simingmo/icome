@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "0.2",
+  "scanner": {
+    "name": "lego-security-scanner",
+    "version": "0.2.0"
+  },
+  "scannedFiles": 9,
+  "executedRules": [
+    "security/no-command-injection",
+    "security/no-disabled-tls-verification",
+    "security/no-eval",
+    "security/no-function-constructor",
+    "security/no-hardcoded-secret",
+    "testing/no-always-true-assertion",
+    "testing/no-empty-test",
+    "testing/no-focused-test",
+    "testing/no-skipped-test"
+  ],
+  "findings": [],
+  "summary": {
+    "bySeverity": {
+      "info": 0,
+      "low": 0,
+      "medium": 0,
+      "high": 0,
+      "critical": 0
+    },
+    "byCategory": {},
+    "byRule": {},
+    "byStandard": {}
+  },
+  "durationMs": 23
+}

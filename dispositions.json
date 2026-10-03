@@ -1,0 +1,72 @@
+[
+  {
+    "fingerprint": "527c1b7c93236028",
+    "status": "false-positive",
+    "note": "desktop/main.cjs:14 path.join(app.getPath(\"userData\"), \"reports\") 路径来自 Electron API，非外部输入",
+    "updatedAt": "2026-10-03T00:00:00.000Z",
+    "updatedBy": "maintainer"
+  },
+  {
+    "fingerprint": "4a451a98a197665e",
+    "status": "false-positive",
+    "note": "src/ai.ts:79 apiKey 取自 env.LEGO_AI_API_KEY 环境变量，正是推荐做法，被变量名误触发",
+    "updatedAt": "2026-10-03T00:00:00.000Z",
+    "updatedBy": "maintainer"
+  },
+  {
+    "fingerprint": "a739e8ce70c0b264",
+    "status": "false-positive",
+    "note": "src/builtin-plugin.ts:205 XSS 规则自身的正则源码文本，规则定义文件自触发",
+    "updatedAt": "2026-10-03T00:00:00.000Z",
+    "updatedBy": "maintainer"
+  },
+  {
+    "fingerprint": "23e81da31afe3d21",
+    "status": "false-positive",
+    "note": "src/panel.ts:41 面板内联脚本 innerHTML 赋值，所有插值均先经 esc()（escapeHtml）转义",
+    "updatedAt": "2026-10-03T00:00:00.000Z",
+    "updatedBy": "maintainer"
+  },
+  {
+    "fingerprint": "d7a520c136d10100",
+    "status": "false-positive",
+    "note": "src/panel.ts:41 面板内联脚本 innerHTML 赋值，所有插值均先经 esc()（escapeHtml）转义",
+    "updatedAt": "2026-10-03T00:00:00.000Z",
+    "updatedBy": "maintainer"
+  },
+  {
+    "fingerprint": "633f0c70573c2638",
+    "status": "false-positive",
+    "note": "src/panel.ts:41 面板内联脚本 innerHTML 赋值，所有插值均先经 esc()（escapeHtml）转义",
+    "updatedAt": "2026-10-03T00:00:00.000Z",
+    "updatedBy": "maintainer"
+  },
+  {
+    "fingerprint": "705ec9a8ee66ae61",
+    "status": "false-positive",
+    "note": "src/panel.ts:41 面板内联脚本 innerHTML 赋值，所有插值均先经 esc()（escapeHtml）转义",
+    "updatedAt": "2026-10-03T00:00:00.000Z",
+    "updatedBy": "maintainer"
+  },
+  {
+    "fingerprint": "0bfe84f39a590074",
+    "status": "false-positive",
+    "note": "src/panel.ts:167 authToken 取自 options.authToken 参数，非硬编码",
+    "updatedAt": "2026-10-03T00:00:00.000Z",
+    "updatedBy": "maintainer"
+  },
+  {
+    "fingerprint": "c2fd0287053e719a",
+    "status": "false-positive",
+    "note": "src/panel.ts:320 authToken 取自 options.authToken 参数，非硬编码",
+    "updatedAt": "2026-10-03T00:00:00.000Z",
+    "updatedBy": "maintainer"
+  },
+  {
+    "fingerprint": "4fdb061873c758d7",
+    "status": "false-positive",
+    "note": "src/rule-utils.ts:28 SQL 注入规则自身的示例/正则文本，规则定义文件自触发",
+    "updatedAt": "2026-10-03T00:00:00.000Z",
+    "updatedBy": "maintainer"
+  }
+]

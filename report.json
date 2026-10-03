@@ -1,0 +1,2580 @@
+{
+  "schemaVersion": "0.4",
+  "scanner": {
+    "name": "lego-security-scanner",
+    "version": "0.3.0"
+  },
+  "scannedFiles": 43,
+  "executedRules": [
+    "configuration/no-debug-mode",
+    "configuration/no-insecure-cookie",
+    "configuration/no-wildcard-cors",
+    "security/no-cloud-access-key",
+    "security/no-command-injection",
+    "security/no-disabled-tls-verification",
+    "security/no-eval",
+    "security/no-function-constructor",
+    "security/no-hardcoded-secret",
+    "security/no-insecure-deserialization",
+    "security/no-insecure-randomness",
+    "security/no-open-redirect",
+    "security/no-path-traversal",
+    "security/no-private-key",
+    "security/no-sql-injection",
+    "security/no-ssrf",
+    "security/no-weak-hash",
+    "security/no-xss",
+    "testing/no-always-true-assertion",
+    "testing/no-empty-test",
+    "testing/no-focused-test",
+    "testing/no-skipped-test"
+  ],
+  "findings": [
+    {
+      "ruleId": "security/no-path-traversal",
+      "message": "文件路径可能受外部输入控制，存在路径穿越风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "desktop/main.cjs",
+      "line": 14,
+      "column": 17,
+      "evidence": "path.join(app.getPath(\"user",
+      "suggestion": "对文件名做规范化与基目录约束，拒绝包含 '../' 或绝对路径的用户输入。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-22"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V12.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-AUTH"
+        }
+      ],
+      "fingerprint": "aeae33b2e02de5cb"
+    },
+    {
+      "ruleId": "security/no-hardcoded-secret",
+      "message": "发现疑似硬编码凭据。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "src/ai.ts",
+      "line": 79,
+      "column": 87,
+      "evidence": "apiKey: [REDACTED]",
+      "suggestion": "通过环境变量或密钥管理服务注入凭据，并立即轮换已暴露的密钥。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-798"
+        },
+        {
+          "standard": "nist-ssdf",
+          "version": "1.1",
+          "control": "PW.9"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V14.3"
+        }
+      ],
+      "fingerprint": "67005272c4d7daff"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "src/builtin-plugin.ts",
+      "line": 205,
+      "column": 50,
+      "evidence": "dangerouslySetInnerHTML",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "fc7cc0245a1db1e6"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "src/panel.ts",
+      "line": 41,
+      "column": 5866,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "dd8bdb46942ad45a"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "src/panel.ts",
+      "line": 41,
+      "column": 8478,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "dd8bdb46942ad45a"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "src/panel.ts",
+      "line": 41,
+      "column": 8707,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "dd8bdb46942ad45a"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "src/panel.ts",
+      "line": 41,
+      "column": 8966,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "dd8bdb46942ad45a"
+    },
+    {
+      "ruleId": "security/no-hardcoded-secret",
+      "message": "发现疑似硬编码凭据。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "src/panel.ts",
+      "line": 166,
+      "column": 13,
+      "evidence": "Token = [REDACTED]",
+      "suggestion": "通过环境变量或密钥管理服务注入凭据，并立即轮换已暴露的密钥。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-798"
+        },
+        {
+          "standard": "nist-ssdf",
+          "version": "1.1",
+          "control": "PW.9"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V14.3"
+        }
+      ],
+      "fingerprint": "879f323a5ec41227"
+    },
+    {
+      "ruleId": "security/no-hardcoded-secret",
+      "message": "发现疑似硬编码凭据。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "src/panel.ts",
+      "line": 316,
+      "column": 13,
+      "evidence": "Token = [REDACTED]",
+      "suggestion": "通过环境变量或密钥管理服务注入凭据，并立即轮换已暴露的密钥。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-798"
+        },
+        {
+          "standard": "nist-ssdf",
+          "version": "1.1",
+          "control": "PW.9"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V14.3"
+        }
+      ],
+      "fingerprint": "9a9bdaf05c48376a"
+    },
+    {
+      "ruleId": "security/no-sql-injection",
+      "message": "SQL 语句可能拼接了外部输入，存在注入风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "src/rule-utils.ts",
+      "line": 28,
+      "column": 31,
+      "evidence": "update(`${ruleId}\\0${file}\\0${line}\\0${evidence}",
+      "suggestion": "使用参数化查询或预编译语句，切勿将用户输入直接拼入 SQL 字符串。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-89"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-INPV"
+        }
+      ],
+      "fingerprint": "aa0c871d805cfcd0"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/exploit.js",
+      "line": 141,
+      "column": 12,
+      "evidence": ".innerHTML =",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "0ef794418957549d"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/hotpatch.js",
+      "line": 29,
+      "column": 12,
+      "evidence": ".innerHTML =",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "b106bd2de29a8cd3"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 48,
+      "column": 45,
+      "evidence": ".innerHTML =",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "9704945eb503c5a8"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 53,
+      "column": 49,
+      "evidence": ".innerHTML =",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "c5af0a236a93e85d"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 54,
+      "column": 49,
+      "evidence": ".innerHTML =",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "fe28bd680009a768"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 84,
+      "column": 37,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "10b0d3ad41f451f0"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 110,
+      "column": 38,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "5e5a6851cb9a00c1"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 126,
+      "column": 40,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "36e6691d7e72523a"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 142,
+      "column": 39,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "edace565cc8ffdfe"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 171,
+      "column": 41,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "fd1814edc9c412a0"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 182,
+      "column": 43,
+      "evidence": ".innerHTML =",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "6c4fae96ad55b545"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 188,
+      "column": 9,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "21b9bc09453dc124"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 210,
+      "column": 47,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "f2dc39dba1cd9d30"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 212,
+      "column": 47,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "d412629a3b3c1e23"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 227,
+      "column": 48,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "112ba90ff0caa7be"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 243,
+      "column": 47,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "6c35ddcbb19f2791"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 265,
+      "column": 37,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "46aeeaf95468621a"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 278,
+      "column": 37,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "0443c38e536965a5"
+    },
+    {
+      "ruleId": "security/no-eval",
+      "message": "使用 eval 可能导致代码注入。",
+      "severity": "high",
+      "confidence": "high",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 382,
+      "column": 3,
+      "evidence": "eval(",
+      "suggestion": "使用显式解析或安全的数据映射替代 eval。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-95"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-INPV"
+        }
+      ],
+      "fingerprint": "5a5d44a0bad36d61"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 394,
+      "column": 43,
+      "evidence": ".innerHTML =",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "1fc54bc3e2250119"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 395,
+      "column": 39,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "320b68422b3a8c86"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 512,
+      "column": 42,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "b5d0ae1a024fede7"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 524,
+      "column": 46,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "0de692031752779f"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 555,
+      "column": 41,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "a33e50592952a43f"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 563,
+      "column": 45,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "44f262c4527ab57d"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 597,
+      "column": 41,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "c448e4b1e8797d46"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 605,
+      "column": 45,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "b90a6fb6fd9b8366"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 644,
+      "column": 41,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "9550c7c8afd4d50f"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 652,
+      "column": 45,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "b31090ac9821a54e"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 662,
+      "column": 41,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "b65b16461dafa60e"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 690,
+      "column": 41,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "6a74cab1f914d88b"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 698,
+      "column": 45,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "89c61acff5b9fc3a"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 729,
+      "column": 38,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "daedc2e971cc0f14"
+    },
+    {
+      "ruleId": "security/no-function-constructor",
+      "message": "Function 构造器会执行动态代码。",
+      "severity": "high",
+      "confidence": "high",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 734,
+      "column": 51,
+      "evidence": "new Function(",
+      "suggestion": "移除动态代码执行，改用预定义函数。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-95"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5"
+        }
+      ],
+      "fingerprint": "f00851f95666963d"
+    },
+    {
+      "ruleId": "security/no-function-constructor",
+      "message": "Function 构造器会执行动态代码。",
+      "severity": "high",
+      "confidence": "high",
+      "category": "security",
+      "file": "tools/rips/js/script.js",
+      "line": 743,
+      "column": 51,
+      "evidence": "new Function(",
+      "suggestion": "移除动态代码执行，改用预定义函数。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-95"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5"
+        }
+      ],
+      "fingerprint": "55b6af1887305fa3"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/exploit.js",
+      "line": 141,
+      "column": 12,
+      "evidence": ".innerHTML =",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "d2824dd5c53fc881"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/hotpatch.js",
+      "line": 29,
+      "column": 12,
+      "evidence": ".innerHTML =",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "f62fc338251efe4c"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 48,
+      "column": 45,
+      "evidence": ".innerHTML =",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "1c201a31dad574e5"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 53,
+      "column": 49,
+      "evidence": ".innerHTML =",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "d22ba18652f27515"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 54,
+      "column": 49,
+      "evidence": ".innerHTML =",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "0c4b3c513234a920"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 84,
+      "column": 37,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "d02ad5bb44027e10"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 110,
+      "column": 38,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "84a33c2ff83341cb"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 126,
+      "column": 40,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "84b14ebc1d684564"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 142,
+      "column": 39,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "e5629ddbca9e863b"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 171,
+      "column": 41,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "82e66413a8ca288a"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 182,
+      "column": 43,
+      "evidence": ".innerHTML =",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "cc07a1c8f1d3d811"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 188,
+      "column": 9,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "7e9c68f3e35d3cc4"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 210,
+      "column": 47,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "6ef52d026698cf6e"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 212,
+      "column": 47,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "02898d306768c82c"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 227,
+      "column": 48,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "8186155037ef8e15"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 243,
+      "column": 47,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "fe01400da69fd603"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 265,
+      "column": 37,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "b916150a14d98512"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 278,
+      "column": 37,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "81a30a032df88127"
+    },
+    {
+      "ruleId": "security/no-eval",
+      "message": "使用 eval 可能导致代码注入。",
+      "severity": "high",
+      "confidence": "high",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 382,
+      "column": 3,
+      "evidence": "eval(",
+      "suggestion": "使用显式解析或安全的数据映射替代 eval。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-95"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-INPV"
+        }
+      ],
+      "fingerprint": "853ed584ba2c2e50"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 394,
+      "column": 43,
+      "evidence": ".innerHTML =",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "696131f8e1506ea3"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 395,
+      "column": 39,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "ef10e517d886c09c"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 512,
+      "column": 42,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "df83e8eb65d28433"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 524,
+      "column": 46,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "bd95a9a8d624652f"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 555,
+      "column": 41,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "309f5f162ec001ab"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 563,
+      "column": 45,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "edf9cdd783c16d83"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 597,
+      "column": 41,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "57c96f76a8808fc1"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 605,
+      "column": 45,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "ead852ba3f7e87ae"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 644,
+      "column": 41,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "4f25ae2d12a4a4ca"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 652,
+      "column": 45,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "3e835a9c495776ef"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 662,
+      "column": 41,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "4eea3fcff67e410f"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 690,
+      "column": 41,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "922fce86a8d99213"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 698,
+      "column": 45,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "12f101984fee63a3"
+    },
+    {
+      "ruleId": "security/no-xss",
+      "message": "内容可能未经编码直接写入页面或响应，存在 XSS 风险。",
+      "severity": "high",
+      "confidence": "medium",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 729,
+      "column": 38,
+      "evidence": ".innerHTML=",
+      "suggestion": "使用安全的渲染 API（如 textContent）或对输出进行上下文转义（如转义 HTML/属性）。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-79"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5.3"
+        },
+        {
+          "standard": "owasp-wstg",
+          "version": "4.2",
+          "control": "WSTG-CLNT"
+        }
+      ],
+      "fingerprint": "6de4f1e5a2a9ac84"
+    },
+    {
+      "ruleId": "security/no-function-constructor",
+      "message": "Function 构造器会执行动态代码。",
+      "severity": "high",
+      "confidence": "high",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 734,
+      "column": 51,
+      "evidence": "new Function(",
+      "suggestion": "移除动态代码执行，改用预定义函数。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-95"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5"
+        }
+      ],
+      "fingerprint": "6fd897ed0f2fcea6"
+    },
+    {
+      "ruleId": "security/no-function-constructor",
+      "message": "Function 构造器会执行动态代码。",
+      "severity": "high",
+      "confidence": "high",
+      "category": "security",
+      "file": "tools/rips/rips-0.55/js/script.js",
+      "line": 743,
+      "column": 51,
+      "evidence": "new Function(",
+      "suggestion": "移除动态代码执行，改用预定义函数。",
+      "references": [
+        {
+          "standard": "mitre-cwe",
+          "version": "4.20",
+          "control": "CWE-95"
+        },
+        {
+          "standard": "owasp-asvs",
+          "version": "5.0.0",
+          "control": "V5"
+        }
+      ],
+      "fingerprint": "f7b8ffef4b6b0d9f"
+    }
+  ],
+  "summary": {
+    "bySeverity": {
+      "info": 0,
+      "low": 0,
+      "medium": 0,
+      "high": 80,
+      "critical": 0
+    },
+    "byCategory": {
+      "security": 80
+    },
+    "byRule": {
+      "security/no-path-traversal": 1,
+      "security/no-hardcoded-secret": 3,
+      "security/no-xss": 69,
+      "security/no-sql-injection": 1,
+      "security/no-eval": 2,
+      "security/no-function-constructor": 4
+    },
+    "byStandard": {
+      "mitre-cwe": 80,
+      "owasp-asvs": 80,
+      "owasp-wstg": 73,
+      "nist-ssdf": 3
+    }
+  },
+  "durationMs": 172,
+  "status": "succeeded",
+  "diagnostics": [],
+  "metadata": {
+    "target": "C:\\Users\\Administrator\\CodeBuddy\\20261001173542",
+    "startedAt": "2026-10-02T14:28:22.892Z",
+    "finishedAt": "2026-10-02T14:28:23.063Z",
+    "configuration": {
+      "include": [
+        "**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}"
+      ],
+      "exclude": [
+        "**/node_modules/**",
+        "**/.venv/**",
+        "**/venv/**",
+        "**/.venv*/**",
+        "**/venv*/**",
+        "**/env/**",
+        "**/virtualenv*/**",
+        "**/site-packages/**",
+        "**/dist-packages/**",
+        "**/.tox/**",
+        "**/__pycache__/**",
+        "**/*.egg-info/**",
+        "**/bower_components/**",
+        "**/vendor/**",
+        "**/dist/**",
+        "**/build/**",
+        "**/coverage/**",
+        "**/.git/**",
+        "**/tests/**",
+        "**/__tests__/**",
+        "**/test/**",
+        "**/spec/**",
+        "**/*.test.*",
+        "**/*.spec.*"
+      ],
+      "includeTests": false,
+      "standards": []
+    }
+  },
+  "coverage": {
+    "discoveredFiles": 43,
+    "scannedFiles": 43,
+    "skippedFiles": 0,
+    "failedFiles": 0,
+    "scannedBytes": 323775,
+    "byLanguage": {
+      "javascript": {
+        "discovered": 9,
+        "scanned": 9,
+        "skipped": 0,
+        "failed": 0
+      },
+      "typescript": {
+        "discovered": 34,
+        "scanned": 34,
+        "skipped": 0,
+        "failed": 0
+      }
+    }
+  },
+  "stages": [
+    {
+      "phase": "configuration",
+      "status": "succeeded"
+    },
+    {
+      "phase": "discovery",
+      "status": "succeeded"
+    },
+    {
+      "phase": "read",
+      "status": "succeeded"
+    },
+    {
+      "phase": "rule",
+      "status": "succeeded"
+    },
+    {
+      "phase": "external-scanner",
+      "status": "succeeded"
+    }
+  ],
+  "modules": [
+    {
+      "id": "@lego-scan/security",
+      "version": "0.3.0",
+      "status": "succeeded",
+      "rules": [
+        "security/no-command-injection",
+        "security/no-eval",
+        "security/no-function-constructor",
+        "security/no-insecure-deserialization",
+        "security/no-insecure-randomness",
+        "security/no-open-redirect",
+        "security/no-path-traversal",
+        "security/no-sql-injection",
+        "security/no-ssrf",
+        "security/no-weak-hash",
+        "security/no-xss"
+      ],
+      "externalScanners": []
+    },
+    {
+      "id": "@lego-scan/credentials",
+      "version": "0.3.0",
+      "status": "succeeded",
+      "rules": [
+        "security/no-cloud-access-key",
+        "security/no-hardcoded-secret",
+        "security/no-private-key"
+      ],
+      "externalScanners": []
+    },
+    {
+      "id": "@lego-scan/configuration",
+      "version": "0.3.0",
+      "status": "succeeded",
+      "rules": [
+        "configuration/no-debug-mode",
+        "configuration/no-insecure-cookie",
+        "configuration/no-wildcard-cors",
+        "security/no-disabled-tls-verification"
+      ],
+      "externalScanners": []
+    },
+    {
+      "id": "@lego-scan/testing",
+      "version": "0.3.0",
+      "status": "succeeded",
+      "rules": [
+        "testing/no-always-true-assertion",
+        "testing/no-empty-test",
+        "testing/no-focused-test",
+        "testing/no-skipped-test"
+      ],
+      "externalScanners": []
+    }
+  ]
+}

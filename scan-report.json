@@ -1,0 +1,28 @@
+{
+  "scannedFiles": 8,
+  "findings": [
+    {
+      "ruleId": "testing/no-focused-test",
+      "message": "聚焦测试会导致其他测试不执行。",
+      "severity": "high",
+      "category": "testing",
+      "file": "tests/scanner.test.ts",
+      "line": 39,
+      "column": 22,
+      "evidence": "\"src/app.ts\": \"test.only('not a test file', () => {});\",",
+      "suggestion": "提交前移除 .only。"
+    },
+    {
+      "ruleId": "testing/no-focused-test",
+      "message": "聚焦测试会导致其他测试不执行。",
+      "severity": "high",
+      "category": "testing",
+      "file": "tests/scanner.test.ts",
+      "line": 40,
+      "column": 29,
+      "evidence": "\"tests/app.test.ts\": \"test.only('focused', () => {});\\ntest.skip('later', () => {});\",",
+      "suggestion": "提交前移除 .only。"
+    }
+  ],
+  "durationMs": 38
+}
