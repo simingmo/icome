@@ -13,6 +13,19 @@ describe("command runner", () => {
     expect(result.outputLimitExceeded).toBeUndefined();
   });
 
+  it("保留大量小块和多字节 UTF-8 输出", async () => {
+    const expected = "安全".repeat(2_000);
+    const result = await runCommand({
+      command: process.execPath,
+      args: ["-e", "for (let i = 0; i < 2000; i++) process.stdout.write('安全')"],
+      cwd: process.cwd(),
+      maxOutputBytes: Buffer.byteLength(expected, "utf8"),
+    });
+
+    expect(result.stdout).toBe(expected);
+    expect(result.outputLimitExceeded).toBeUndefined();
+  });
+
   it("限制标准输出并返回可观察错误", async () => {
     const result = await runCommand({
       command: process.execPath,

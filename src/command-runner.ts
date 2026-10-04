@@ -56,8 +56,10 @@ export async function runCommand(options: CommandRunOptions): Promise<CommandRun
       reject(new Error("无法捕获命令输出。"));
       return;
     }
-    let stdout = "";
-    let stderr = "";
+    const stdoutChunks: Buffer[] = [];
+    const stderrChunks: Buffer[] = [];
+    let stdoutBytes = 0;
+    let stderrBytes = 0;
     let settled = false;
     let timedOut = false;
     let aborted = false;
@@ -89,26 +91,34 @@ export async function runCommand(options: CommandRunOptions): Promise<CommandRun
       terminate();
     }, timeoutMs);
     timer.unref();
-    const append = (current: string, chunk: string, stream: "stdout" | "stderr"): string => {
-      if (outputLimitExceeded) return current;
-      const next = current + chunk;
-      if (Buffer.byteLength(next, "utf8") <= maxOutputBytes) return next;
-      outputLimitExceeded = stream;
-      terminate();
-      return current;
+    const append = (chunk: Buffer, stream: "stdout" | "stderr"): void => {
+      if (outputLimitExceeded) return;
+      const bytes = stream === "stdout" ? stdoutBytes : stderrBytes;
+      if (bytes + chunk.length > maxOutputBytes) {
+        outputLimitExceeded = stream;
+        terminate();
+        return;
+      }
+      if (stream === "stdout") {
+        stdoutChunks.push(chunk);
+        stdoutBytes += chunk.length;
+      } else {
+        stderrChunks.push(chunk);
+        stderrBytes += chunk.length;
+      }
     };
-    stdoutStream.setEncoding("utf8");
-    stderrStream.setEncoding("utf8");
-    stdoutStream.on("data", (chunk: string) => {
-      stdout = append(stdout, chunk, "stdout");
-    });
-    stderrStream.on("data", (chunk: string) => {
-      stderr = append(stderr, chunk, "stderr");
-    });
+    stdoutStream.on("data", (chunk: Buffer) => append(chunk, "stdout"));
+    stderrStream.on("data", (chunk: Buffer) => append(chunk, "stderr"));
     child.on("error", (error) => finish(() => reject(error)));
     child.on("close", (code) => finish(() => {
       if (aborted) reject(options.signal?.reason ?? new DOMException("命令已取消。", "AbortError"));
-      else resolve({ stdout, stderr, code, timedOut, outputLimitExceeded });
+      else resolve({
+        stdout: Buffer.concat(stdoutChunks, stdoutBytes).toString("utf8"),
+        stderr: Buffer.concat(stderrChunks, stderrBytes).toString("utf8"),
+        code,
+        timedOut,
+        outputLimitExceeded,
+      });
     }));
   });
 }
