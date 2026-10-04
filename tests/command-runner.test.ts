@@ -58,6 +58,22 @@ describe("command runner", () => {
     await expect(runCommand({ command: process.execPath, cwd: process.cwd(), maxOutputBytes: -1 })).rejects.toThrow("maxOutputBytes 必须是正整数");
   });
 
+  it("在启动前和运行中响应取消", async () => {
+    const preCancelled = new AbortController();
+    preCancelled.abort(new Error("pre-cancelled"));
+    await expect(runCommand({ command: process.execPath, cwd: process.cwd(), signal: preCancelled.signal })).rejects.toThrow("pre-cancelled");
+
+    const controller = new AbortController();
+    const running = runCommand({
+      command: process.execPath,
+      args: ["-e", "setTimeout(() => {}, 10000)"],
+      cwd: process.cwd(),
+      signal: controller.signal,
+    });
+    controller.abort();
+    await expect(running).rejects.toMatchObject({ name: "AbortError" });
+  });
+
   it.runIf(process.platform === "win32")("无需 shell 即可执行 Windows 命令 shim", async () => {
     const result = await runCommand({
       command: "npm.cmd",

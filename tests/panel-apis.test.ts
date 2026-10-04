@@ -52,7 +52,7 @@ async function startPanel(options: Parameters<typeof createPanelServer>[0]) {
 describe("Panel 附加 API", () => {
   it("渲染出的内联脚本语法合法且包含关键函数", async () => {
     const cwd = await mkdtemp(path.join(tmpdir(), "lego-script-"));
-    cleanup.push(() => rm(cwd, { recursive: true, force: true }));
+    cleanup.push(() => rmTree(cwd));
     const { base } = await startPanel({ cwd, reportsDir: path.join(cwd, "reports") });
     const html = await (await fetch(base)).text();
     const script = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((match) => match[1]).join("\n;\n");
@@ -64,8 +64,8 @@ describe("Panel 附加 API", () => {
   it("根据允许目录识别项目语言，并拒绝探测范围外目录", async () => {
     const cwd = await mkdtemp(path.join(tmpdir(), "lego-lang-"));
     const outside = await mkdtemp(path.join(tmpdir(), "lego-lang-outside-"));
-    cleanup.push(() => rm(cwd, { recursive: true, force: true }));
-    cleanup.push(() => rm(outside, { recursive: true, force: true }));
+    cleanup.push(() => rmTree(cwd));
+    cleanup.push(() => rmTree(outside));
     await writeFile(path.join(cwd, "main.py"), "print('hi')", "utf8");
     await writeFile(path.join(outside, "secret.ts"), "const secret = true;", "utf8");
     const { base } = await startPanel({ cwd, reportsDir: path.join(cwd, "reports") });
@@ -81,7 +81,7 @@ describe("Panel 附加 API", () => {
 
   it("少于两次扫描时差异接口给出提示", async () => {
     const cwd = await mkdtemp(path.join(tmpdir(), "lego-diff-"));
-    cleanup.push(() => rm(cwd, { recursive: true, force: true }));
+    cleanup.push(() => rmTree(cwd));
     const { base } = await startPanel({ cwd, reportsDir: path.join(cwd, "reports"), scanRunner: vi.fn(async () => resultWith(["a"])) });
     const data = await (await fetch(`${base}/api/diff`)).json() as { message: string };
     expect(data.message).toContain("两次成功扫描");
@@ -89,7 +89,7 @@ describe("Panel 附加 API", () => {
 
   it("dependencyAudit 任务装配依赖漏洞审计积木并回显选项", async () => {
     const cwd = await mkdtemp(path.join(tmpdir(), "lego-dep-audit-"));
-    cleanup.push(() => rm(cwd, { recursive: true, force: true }));
+    cleanup.push(() => rmTree(cwd));
     await writeFile(path.join(cwd, "app.ts"), "const safe = true;", "utf8");
     const scanRunner = vi.fn(async (_options: ScanOptions) => resultWith([]));
     const { base } = await startPanel({ cwd, reportsDir: path.join(cwd, "reports"), scanRunner });
@@ -114,7 +114,7 @@ describe("Panel 附加 API", () => {
 
   it("对比两次扫描计算新增与修复", async () => {
     const cwd = await mkdtemp(path.join(tmpdir(), "lego-diff-2-"));
-    cleanup.push(() => rm(cwd, { recursive: true, force: true }));
+    cleanup.push(() => rmTree(cwd));
     let calls = 0;
     const scanRunner = vi.fn(async () => {
       calls += 1;
@@ -137,11 +137,106 @@ describe("Panel 附加 API", () => {
     expect(diff.added.map((item) => item.fingerprint)).toEqual([]);
     expect(diff.fixed.map((item) => item.fingerprint)).toEqual(["removed"]);
     expect(diff.unchanged.map((item) => item.fingerprint)).toEqual(["keep"]);
+    const selfComparison = await fetch(`${base}/api/diff?baseJobId=${first.id}&currentJobId=${first.id}`);
+    expect(selfComparison.status).toBe(400);
+    expect(await selfComparison.json()).toMatchObject({ error: expect.stringContaining("两次不同扫描") });
+  });
+
+  it("自动比较跳过未成功完成的任务", async () => {
+    const cwd = await mkdtemp(path.join(tmpdir(), "lego-diff-status-"));
+    cleanup.push(() => rmTree(cwd));
+    let calls = 0;
+    const scanRunner = vi.fn(async () => {
+      calls += 1;
+      if (calls === 2) return { ...resultWith(["partial"]), status: "partial" as const, scannedFiles: 0 };
+      return resultWith(calls === 1 ? ["keep", "removed"] : ["keep"]);
+    });
+    const { base } = await startPanel({ cwd, reportsDir: path.join(cwd, "reports"), scanRunner });
+    const createAndWait = async (): Promise<string> => {
+      const created = await (await fetch(`${base}/api/scans`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cwd }) })).json() as { id: string };
+      let status = "queued";
+      for (let attempt = 0; attempt < 100 && ["queued", "running"].includes(status); attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        status = ((await (await fetch(`${base}/api/scans/${created.id}`)).json()) as { status: string }).status;
+      }
+      return created.id;
+    };
+    const firstId = await createAndWait();
+    const partialId = await createAndWait();
+    await createAndWait();
+
+    const automatic = await (await fetch(`${base}/api/diff`)).json() as { fixed: Array<{ fingerprint: string }> };
+    expect(automatic.fixed.map((item) => item.fingerprint)).toEqual(["removed"]);
+    const explicit = await fetch(`${base}/api/diff?baseJobId=${firstId}&currentJobId=${partialId}`);
+    expect(explicit.status).toBe(400);
+    expect(await explicit.json()).toMatchObject({ error: expect.stringContaining("两次成功扫描") });
+    const partial = await (await fetch(`${base}/api/scans/${partialId}`)).json() as { status: string };
+    expect(partial.status).toBe("partial");
+  });
+
+  it("差异比较不会混用不同目标或扫描配置", async () => {
+    const firstCwd = await mkdtemp(path.join(tmpdir(), "lego-diff-a-"));
+    const secondCwd = await mkdtemp(path.join(tmpdir(), "lego-diff-b-"));
+    cleanup.push(() => rmTree(firstCwd));
+    cleanup.push(() => rmTree(secondCwd));
+    await writeFile(path.join(firstCwd, "app.ts"), "const a = true;", "utf8");
+    await writeFile(path.join(secondCwd, "app.ts"), "const b = true;", "utf8");
+    let firstCalls = 0;
+    const scanRunner = vi.fn(async (options: ScanOptions) => {
+      const isFirstTarget = path.resolve(options.cwd).toLowerCase() === path.resolve(firstCwd).toLowerCase();
+      if (isFirstTarget) {
+        firstCalls += 1;
+        return resultWith(firstCalls === 1 ? ["keep", "removed"] : ["keep"]);
+      }
+      return resultWith(["other"]);
+    });
+    const { base } = await startPanel({ cwd: firstCwd, allowedRoots: [firstCwd, secondCwd], reportsDir: path.join(firstCwd, "reports"), scanRunner });
+    const create = async (cwd: string) => (await (await fetch(`${base}/api/scans`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cwd }) })).json()) as { id: string };
+    const wait = async (id: string) => {
+      let status = "queued";
+      for (let attempt = 0; attempt < 100 && ["queued", "running"].includes(status); attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        status = ((await (await fetch(`${base}/api/scans/${id}`)).json()) as { status: string }).status;
+      }
+    };
+    const first = await create(firstCwd);
+    await wait(first.id);
+    const unrelated = await create(secondCwd);
+    await wait(unrelated.id);
+    const current = await create(firstCwd);
+    await wait(current.id);
+
+    const automatic = await (await fetch(`${base}/api/diff`)).json() as { fixed: Array<{ fingerprint: string }> };
+    expect(automatic.fixed.map((item) => item.fingerprint)).toEqual(["removed"]);
+    const incompatible = await fetch(`${base}/api/diff?baseJobId=${first.id}&currentJobId=${unrelated.id}`);
+    expect(incompatible.status).toBe(400);
+    expect(await incompatible.json()).toMatchObject({ error: expect.stringContaining("相同目标和扫描配置") });
+  });
+
+  it("自动识别的扫描范围变化后不会比较不兼容任务", async () => {
+    const cwd = await mkdtemp(path.join(tmpdir(), "lego-diff-scope-"));
+    cleanup.push(() => rmTree(cwd));
+    await writeFile(path.join(cwd, "app.ts"), "const value = true;", "utf8");
+    const { base } = await startPanel({ cwd, reportsDir: path.join(cwd, "reports"), scanRunner: vi.fn(async () => resultWith(["same"])) });
+    const createAndWait = async (): Promise<void> => {
+      const created = await (await fetch(`${base}/api/scans`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cwd }) })).json() as { id: string };
+      let status = "queued";
+      for (let attempt = 0; attempt < 100 && ["queued", "running"].includes(status); attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        status = ((await (await fetch(`${base}/api/scans/${created.id}`)).json()) as { status: string }).status;
+      }
+    };
+    await createAndWait();
+    await writeFile(path.join(cwd, "main.py"), "print('changed scope')", "utf8");
+    await createAndWait();
+
+    const diff = await (await fetch(`${base}/api/diff`)).json() as { message: string };
+    expect(diff.message).toContain("目标和配置必须相同");
   });
 
   it("浏览器静默恢复输入值后最终扫描目标同步更新", async () => {
     const cwd = await mkdtemp(path.join(tmpdir(), "lego-target-sync-"));
-    cleanup.push(() => rm(cwd, { recursive: true, force: true }));
+    cleanup.push(() => rmTree(cwd));
     const { base } = await startPanel({ cwd, reportsDir: path.join(cwd, "reports") });
     const html = await (await fetch(base)).text();
     const script = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((match) => match[1]).join("\n;\n");

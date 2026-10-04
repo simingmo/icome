@@ -92,6 +92,44 @@ describe("Panel HTTP 黑盒", () => {
     expect(scanRunner).toHaveBeenCalledWith(expect.objectContaining({ cwd: await (await import("node:fs/promises")).realpath(allowedCwd) }));
   });
 
+  it("文件预览阻止目录内符号链接逃逸", async () => {
+    const cwd = await mkdtemp(path.join(tmpdir(), "lego-panel-preview-"));
+    const outside = await mkdtemp(path.join(tmpdir(), "lego-panel-secret-"));
+    const secret = path.join(outside, "secret.ts");
+    await writeFile(path.join(cwd, "app.ts"), "const safe = true;", "utf8");
+    await writeFile(secret, "const privateValue = true;", "utf8");
+    const linked = path.join(cwd, "linked.ts");
+    cleanup.push(() => rmTree(cwd));
+    cleanup.push(() => rmTree(outside));
+    try { await symlink(secret, linked, "file"); } catch (error) { if ((error as NodeJS.ErrnoException).code === "EPERM") return; throw error; }
+    const { server } = createPanelServer({ cwd, reportsDir: path.join(cwd, "reports"), scanRunner: vi.fn(async () => emptyResult()) });
+    await new Promise<void>((resolve, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", resolve); });
+    cleanup.push(() => new Promise<void>((resolve) => server.close(() => resolve())));
+    const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    const created = await (await fetch(`${base}/api/scans`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cwd }) })).json() as { id: string };
+    const response = await fetch(`${base}/api/scans/${created.id}/file?path=${encodeURIComponent(linked)}`);
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ error: expect.stringContaining("实际路径超出") });
+  });
+
+  it("为无效和超限请求体返回明确客户端错误", async () => {
+    const cwd = await mkdtemp(path.join(tmpdir(), "lego-panel-body-"));
+    cleanup.push(() => rmTree(cwd));
+    const { server } = createPanelServer({ cwd, reportsDir: path.join(cwd, "reports") });
+    await new Promise<void>((resolve, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", resolve); });
+    cleanup.push(() => new Promise<void>((resolve) => server.close(() => resolve())));
+    const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+
+    const malformed = await fetch(`${base}/api/scans`, { method: "POST", headers: { "content-type": "application/json" }, body: "{" });
+    expect(malformed.status).toBe(400);
+    expect(await malformed.json()).toMatchObject({ code: "INVALID_REQUEST_BODY", error: expect.stringContaining("有效的 JSON") });
+    const nonObject = await fetch(`${base}/api/scans`, { method: "POST", headers: { "content-type": "application/json" }, body: "[]" });
+    expect(nonObject.status).toBe(400);
+    const oversized = await fetch(`${base}/api/scans`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ value: "x".repeat(65 * 1024) }) });
+    expect(oversized.status).toBe(413);
+    expect(await oversized.json()).toMatchObject({ code: "INVALID_REQUEST_BODY", error: expect.stringContaining("64 KB") });
+  });
+
   it("使用访问令牌保护全部 API 并脱敏任务结果", async () => {
     const cwd = await mkdtemp(path.join(tmpdir(), "lego-panel-auth-"));
     await writeFile(path.join(cwd, "app.ts"), "const secret = true;", "utf8");

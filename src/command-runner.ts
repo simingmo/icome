@@ -7,6 +7,7 @@ export interface CommandRunOptions {
   timeoutMs?: number;
   environment?: Record<string, string>;
   maxOutputBytes?: number;
+  signal?: AbortSignal;
 }
 
 export interface CommandRunResult {
@@ -39,6 +40,7 @@ export async function runCommand(options: CommandRunOptions): Promise<CommandRun
   validatePositiveInteger("timeoutMs", timeoutMs);
   validatePositiveInteger("maxOutputBytes", maxOutputBytes);
   if (!options.command.trim()) throw new Error("command 不能为空。");
+  options.signal?.throwIfAborted();
 
   return await new Promise((resolve, reject) => {
     const child = crossSpawn(options.command, [...(options.args ?? [])], {
@@ -58,6 +60,7 @@ export async function runCommand(options: CommandRunOptions): Promise<CommandRun
     let stderr = "";
     let settled = false;
     let timedOut = false;
+    let aborted = false;
     let hardKill: NodeJS.Timeout | undefined;
     let outputLimitExceeded: CommandRunResult["outputLimitExceeded"];
     const finish = (action: () => void): void => {
@@ -65,6 +68,7 @@ export async function runCommand(options: CommandRunOptions): Promise<CommandRun
       settled = true;
       clearTimeout(timer);
       if (hardKill) clearTimeout(hardKill);
+      options.signal?.removeEventListener("abort", handleAbort);
       action();
     };
     const terminate = (): void => {
@@ -74,6 +78,12 @@ export async function runCommand(options: CommandRunOptions): Promise<CommandRun
       }, FORCE_KILL_DELAY_MS);
       hardKill.unref();
     };
+    const handleAbort = (): void => {
+      aborted = true;
+      terminate();
+    };
+    options.signal?.addEventListener("abort", handleAbort, { once: true });
+    if (options.signal?.aborted) handleAbort();
     const timer = setTimeout(() => {
       timedOut = true;
       terminate();
@@ -96,7 +106,10 @@ export async function runCommand(options: CommandRunOptions): Promise<CommandRun
       stderr = append(stderr, chunk, "stderr");
     });
     child.on("error", (error) => finish(() => reject(error)));
-    child.on("close", (code) => finish(() => resolve({ stdout, stderr, code, timedOut, outputLimitExceeded })));
+    child.on("close", (code) => finish(() => {
+      if (aborted) reject(options.signal?.reason ?? new DOMException("命令已取消。", "AbortError"));
+      else resolve({ stdout, stderr, code, timedOut, outputLimitExceeded });
+    }));
   });
 }
 

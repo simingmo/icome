@@ -10,6 +10,7 @@ const SCANNABLE_FILES = /(?:\.(?:js|jsx|mjs|cjs|ts|tsx|mts|cts|php|java|jsp|cs|c
 const MAX_ENTRIES = 10_000;
 const MAX_ENTRY_SIZE = 128 * 1024 * 1024;
 const MAX_TOTAL_SIZE = 512 * 1024 * 1024;
+const MAX_ARCHIVE_SOURCE_SIZE = 512 * 1024 * 1024;
 
 export type ScanTargetKind = "directory" | "file" | "archive";
 
@@ -32,7 +33,13 @@ function safeEntryName(name: string): string {
   return segments.join("/");
 }
 
+async function assertArchiveSourceSize(originalPath: string): Promise<void> {
+  const metadata = await stat(originalPath);
+  if (metadata.size > MAX_ARCHIVE_SOURCE_SIZE) throw new Error("压缩包源文件超过 512 MB 安全限制");
+}
+
 async function prepareArchive(originalPath: string): Promise<PreparedScanTarget> {
+  await assertArchiveSourceSize(originalPath);
   const archive = new AdmZip(originalPath);
   const entries = archive.getEntries();
   if (entries.length > MAX_ENTRIES) throw new Error(`压缩包文件数量超过限制（最多 ${MAX_ENTRIES} 个条目）`);
@@ -107,6 +114,7 @@ function parseTar(buffer: Buffer): TarEntry[] {
 }
 
 async function prepareTarArchive(originalPath: string, gzipped: boolean): Promise<PreparedScanTarget> {
+  await assertArchiveSourceSize(originalPath);
   let buffer = await readFile(originalPath);
   if (gzipped) buffer = gunzipSync(buffer, { maxOutputLength: MAX_TOTAL_SIZE });
   const entries = parseTar(buffer);
@@ -172,4 +180,15 @@ export async function prepareScanTarget(originalPath: string): Promise<PreparedS
 
 export async function cleanupScanTarget(target: Pick<PreparedScanTarget, "cleanupPath">): Promise<void> {
   if (target.cleanupPath) await rm(target.cleanupPath, { recursive: true, force: true });
+}
+
+export async function prepareScanTargets(originalPaths: readonly string[]): Promise<PreparedScanTarget[]> {
+  const prepared: PreparedScanTarget[] = [];
+  try {
+    for (const originalPath of originalPaths) prepared.push(await prepareScanTarget(originalPath));
+    return prepared;
+  } catch (error) {
+    await Promise.allSettled(prepared.map((target) => cleanupScanTarget(target)));
+    throw error;
+  }
 }

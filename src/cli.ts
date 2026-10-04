@@ -8,7 +8,7 @@ import { mergeScanResults, scan, summarize } from "./scanner.js";
 import { startPanel } from "./panel.js";
 import { attachDispositions, validateDispositions } from "./triage.js";
 import { auditWindowsSystem } from "./windows-audit.js";
-import { cleanupScanTarget, prepareScanTarget } from "./scan-target.js";
+import { cleanupScanTarget, prepareScanTargets } from "./scan-target.js";
 import { detectProjectLanguages, includePatternsForLanguages } from "./scan-coverage.js";
 
 interface CliOptions {
@@ -132,8 +132,7 @@ async function main(): Promise<void> {
       includeTests: options.includeTests,
     };
     // 目标可以是目录、单个源码/配置文件或 ZIP 系压缩包，与面板共用同一套目标解析
-    const prepared = [];
-    for (const target of targets) prepared.push(await prepareScanTarget(target));
+    const prepared = await prepareScanTargets(targets);
     let result: ScanResult;
     try {
       const results: ScanResult[] = [];

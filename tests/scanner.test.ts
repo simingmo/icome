@@ -192,6 +192,56 @@ describe("scan", () => {
     expect(registry.listPresets()).toEqual(before.presets);
   });
 
+  it("规则 supports 抛错时归类为规则失败", async () => {
+    const cwd = await fixture({ "src/app.ts": "const safe = true;\n" });
+    const module: ScannerModule = {
+      id: "test/rule-error",
+      version: "1.0.0",
+      rules: [{
+        id: "test/supports-error",
+        description: "test",
+        defaultSeverity: "medium",
+        defaultConfidence: "high",
+        category: "security",
+        tags: [],
+        references: [],
+        supports() { throw new Error("supports failed"); },
+        scan() { return []; },
+      }],
+    };
+    const result = await scan({ cwd, modules: [module], moduleIds: [module.id] });
+    expect(result.diagnostics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: "RULE_SCAN_FAILED", phase: "rule", ruleId: "test/supports-error" }),
+    ]));
+    expect(result.diagnostics.some((item) => item.code === "FILE_READ_FAILED")).toBe(false);
+
+  });
+
+  it("多根扫描受并发上限约束且按根目录顺序合并", async () => {
+    const roots = await Promise.all([
+      fixture({ "src/a.ts": "const safe = true;\n" }),
+      fixture({ "src/b.ts": "const safe = true;\n" }),
+      fixture({ "src/c.ts": "const safe = true;\n" }),
+    ]);
+    let active = 0;
+    let peak = 0;
+    const module: ScannerModule = {
+      id: "test/concurrency",
+      version: "1.0.0",
+      rules: [],
+      scanners: [{ id: "test/concurrency-scanner", version: "1.0.0", async scan(context) {
+        active += 1;
+        peak = Math.max(peak, active);
+        await new Promise((resolve) => setTimeout(resolve, context.cwd === roots[0] ? 20 : 5));
+        active -= 1;
+        return { findings: [], status: "succeeded" };
+      } }],
+    };
+    const result = await scanRoots({ roots, modules: [module], moduleIds: [module.id], maxConcurrency: 2 });
+    expect(peak).toBe(2);
+    expect(result.stages?.filter((stage) => stage.phase === "external-scanner").map((stage) => stage.root)).toEqual(roots);
+  });
+
   it("拒绝重复规则 ID", async () => {
     const cwd = await fixture({ "src/app.ts": "debugger;" });
     const plugin: ScannerPlugin = {

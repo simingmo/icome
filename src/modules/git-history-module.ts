@@ -30,7 +30,7 @@ export function parseGitHistory(output: string): Finding[] {
 export const gitHistoryScanner: ExternalScanner = {
   id: "git-history", version: "0.3.0",
   async scan(context): Promise<ExternalScanResult> {
-    const result = await runAuditCommand("git", ["log", "--all", "-p", "--no-color", "--format=commit:%H", "--extended-regexp", "--regexp-ignore-case", "-G", gitHistoryPattern], context.cwd, 60_000);
+    const result = await runAuditCommand("git", ["log", "--all", "-p", "--no-color", "--format=commit:%H", "--extended-regexp", "--regexp-ignore-case", "-G", gitHistoryPattern], context.cwd, 60_000, context.signal);
     return { findings: result?.stdout ? parseGitHistory(result.stdout) : [], executedRules: ["security/git-history-secret"] };
   },
 };

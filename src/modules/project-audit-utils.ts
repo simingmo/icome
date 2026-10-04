@@ -27,11 +27,12 @@ export async function readJson(file: string): Promise<unknown | undefined> {
   try { return JSON.parse(await readFile(file, "utf8")); } catch { return undefined; }
 }
 
-export async function runAuditCommand(command: string, args: string[], cwd: string, timeoutMs = 120_000): Promise<CommandResult | undefined> {
+export async function runAuditCommand(command: string, args: string[], cwd: string, timeoutMs = 120_000, signal?: AbortSignal): Promise<CommandResult | undefined> {
   try {
-    const result = await runCommand({ command, args, cwd, timeoutMs });
+    const result = await runCommand({ command, args, cwd, timeoutMs, ...(signal ? { signal } : {}) });
     return { stdout: result.stdout, stderr: result.stderr, code: result.code };
-  } catch {
+  } catch (error) {
+    if (signal?.aborted) throw signal.reason;
     return undefined;
   }
 }

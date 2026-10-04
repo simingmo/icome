@@ -1,10 +1,10 @@
-import { access, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { access, mkdtemp, open, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { gzipSync } from "node:zlib";
 import AdmZip from "adm-zip";
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanupScanTarget, prepareScanTarget } from "../src/scan-target.js";
+import { cleanupScanTarget, prepareScanTarget, prepareScanTargets } from "../src/scan-target.js";
 
 const cleanup: string[] = [];
 afterEach(async () => {
@@ -82,6 +82,32 @@ describe("扫描目标准备", () => {
 
     await cleanupScanTarget(target);
     await expect(access(target.scanCwd)).rejects.toThrow();
+  });
+
+  it.each(["oversized.zip", "oversized.tar"])("在解析前拒绝超大归档源文件：%s", async (name) => {
+    const root = await mkdtemp(path.join(tmpdir(), "lego-target-oversized-"));
+    cleanup.push(root);
+    const archivePath = path.join(root, name);
+    const handle = await open(archivePath, "w");
+    try { await handle.truncate(512 * 1024 * 1024 + 1); }
+    finally { await handle.close(); }
+
+    await expect(prepareScanTarget(archivePath)).rejects.toThrow("压缩包源文件超过 512 MB");
+  });
+
+  it("批量目标准备失败时清理已展开的归档", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "lego-target-batch-"));
+    cleanup.push(root);
+    const marker = `cleanup-${Date.now()}-${Math.random().toString(16).slice(2)}.ts`;
+    const archivePath = path.join(root, "first.zip");
+    const archive = new AdmZip();
+    archive.addFile(marker, Buffer.from("const marker = true;", "utf8"));
+    archive.writeZip(archivePath);
+    const before = new Set((await readdir(tmpdir())).filter((entry) => entry.startsWith("lego-scan-archive-")));
+
+    await expect(prepareScanTargets([archivePath, path.join(root, "missing.ts")])).rejects.toThrow("扫描目标不存在");
+    const created = (await readdir(tmpdir())).filter((entry) => entry.startsWith("lego-scan-archive-") && !before.has(entry));
+    expect(created).toEqual([]);
   });
 
   it("拒绝不支持的压缩格式和普通二进制文件", async () => {

@@ -122,7 +122,7 @@ export const npmAuditScanner: ExternalScanner = {
   id: "npm-audit", version: "0.3.0",
   async scan(context): Promise<ExternalScanResult> {
     if (!await fileExists(path.join(context.cwd, "package-lock.json"))) return { findings: [], executedRules: [] };
-    const result = await runAuditCommand(process.platform === "win32" ? "npm.cmd" : "npm", ["audit", "--json", "--omit=dev"], context.cwd);
+    const result = await runAuditCommand(process.platform === "win32" ? "npm.cmd" : "npm", ["audit", "--json", "--omit=dev"], context.cwd, 120_000, context.signal);
     if (!result?.stdout) return { findings: [], executedRules: ["dependency/npm-audit"], status: "failed", diagnostics: [{ code: "DEPENDENCY_AUDIT_UNAVAILABLE", level: "error", phase: "external-scanner", scannerId: "npm-audit", message: "npm audit 未产生可解析报告。", recoverable: true }] };
     try {
       const report = JSON.parse(result.stdout) as { vulnerabilities?: unknown; error?: unknown };
@@ -139,7 +139,7 @@ export const composerAuditScanner: ExternalScanner = {
   id: "composer-audit", version: "0.3.0",
   async scan(context): Promise<ExternalScanResult> {
     if (!await fileExists(path.join(context.cwd, "composer.lock"))) return { findings: [], executedRules: [] };
-    const result = await runAuditCommand(process.platform === "win32" ? "composer.bat" : "composer", ["audit", "--format=json", "--no-interaction"], context.cwd);
+    const result = await runAuditCommand(process.platform === "win32" ? "composer.bat" : "composer", ["audit", "--format=json", "--no-interaction"], context.cwd, 120_000, context.signal);
     if (!result?.stdout) return { findings: [], executedRules: ["dependency/composer-audit"], status: "failed", diagnostics: [{ code: "DEPENDENCY_AUDIT_UNAVAILABLE", level: "error", phase: "external-scanner", scannerId: "composer-audit", message: "Composer audit 未产生可解析报告。", recoverable: true }] };
     try {
       const report = JSON.parse(result.stdout) as { advisories?: unknown; abandoned?: unknown };

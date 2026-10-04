@@ -6,6 +6,7 @@ import type { Confidence, Finding, RuleCategory, ScanDiagnostic, Severity, Stand
 export interface ProjectScanContext {
   cwd: string;
   files: readonly string[];
+  signal?: AbortSignal;
 }
 
 export interface ExternalScanResult {
@@ -120,6 +121,7 @@ async function executeCommand(options: CommandScannerOptions, context: ProjectSc
       args: (options.args ?? []).map((arg) => arg.replaceAll("{cwd}", context.cwd)),
       cwd: context.cwd,
       timeoutMs,
+      ...(context.signal ? { signal: context.signal } : {}),
       ...(options.environment ? { environment: options.environment } : {}),
     });
   } catch (error) {

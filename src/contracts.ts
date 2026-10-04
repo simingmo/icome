@@ -97,6 +97,7 @@ export interface ScanOptions {
   maxFileBytes?: number;
   maxTotalBytes?: number;
   maxDepth?: number;
+  signal?: AbortSignal;
 }
 
 export interface ModuleRegistry {

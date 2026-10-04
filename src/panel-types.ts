@@ -27,6 +27,7 @@ export interface Job {
   id: string;
   status: JobStatus;
   createdAt: string;
+  sequence: number;
   finishedAt?: string;
   cwd: string;
   scanCwd: string;

@@ -67,7 +67,22 @@ Promise.all([loadConfig(),loadTools(),load(),loadDrives()]).catch(e=>document.qu
 }
 
 function json(res: ServerResponse, value: unknown, status = 200): void { const body = JSON.stringify(value); res.writeHead(status, secureHeaders("application/json; charset=utf-8")); res.end(body); }
-async function body(req: IncomingMessage): Promise<Record<string, unknown>> { let text = ""; let size = 0; for await (const chunk of req) { size += Buffer.byteLength(chunk); if (size > MAX_REQUEST_BYTES) throw new Error("请求体超过 64 KB 安全限制"); text += chunk; } return text ? JSON.parse(text) as Record<string, unknown> : {}; }
+class RequestBodyError extends Error { constructor(message: string, readonly status: number) { super(message); } }
+async function body(req: IncomingMessage): Promise<Record<string, unknown>> {
+  let text = "";
+  let size = 0;
+  for await (const chunk of req) {
+    size += Buffer.byteLength(chunk);
+    if (size > MAX_REQUEST_BYTES) throw new RequestBodyError("请求体超过 64 KB 安全限制", 413);
+    text += chunk;
+  }
+  if (!text) return {};
+  let parsed: unknown;
+  try { parsed = JSON.parse(text); }
+  catch { throw new RequestBodyError("请求体不是有效的 JSON", 400); }
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) throw new RequestBodyError("请求体必须是 JSON 对象", 400);
+  return parsed as Record<string, unknown>;
+}
 async function persist(job: Job, dir: string): Promise<void> { await mkdir(dir, { recursive: true }); await writeFile(path.join(dir, `${job.id}.json`), JSON.stringify(job, null, 2), "utf8"); }
 
 export function resolveScanPath(value: unknown, base = process.cwd()): string {
@@ -123,7 +138,7 @@ async function getToolStatuses(): Promise<PanelToolStatus[]> {
 }
 
 function buildDashboard(jobMap: Map<string, Job>, scope: "latest" | "all", type: "all" | "source" | "test" = "all", page = 1, pageSize = 50): DashboardPayload {
-  const all = [...jobMap.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const all = [...jobMap.values()].sort(byNewestJob);
   const selected = scope === "all" ? all : all.slice(0, 1);
   const matchesType = (file: string): boolean => type === "all" || (type === "test" ? isTestPath(file) : Boolean(file) && !isTestPath(file));
   const selectedFindings = selected.flatMap((job) => (job.result?.findings ?? []).filter((finding) => matchesType(finding.file)));
@@ -186,6 +201,38 @@ function buildDashboard(jobMap: Map<string, Job>, scope: "latest" | "all", type:
   };
 }
 
+function comparisonKey(job: Job): string {
+  return JSON.stringify({
+    cwd: path.resolve(job.cwd),
+    targetKind: job.targetKind,
+    includeTests: job.includeTests ?? false,
+    dependencyAudit: job.dependencyAudit ?? false,
+    include: [...(job.include ?? [])].sort(),
+    tools: [...job.tools].sort(),
+  });
+}
+
+function byNewestJob(a: Job, b: Job): number {
+  const aSequence = Number.isSafeInteger(a.sequence) ? a.sequence : -1;
+  const bSequence = Number.isSafeInteger(b.sequence) ? b.sequence : -1;
+  return bSequence - aSequence || b.createdAt.localeCompare(a.createdAt);
+}
+
+function isComparableJob(job: Job | undefined): job is Job & { result: ScanResult } {
+  return job?.status === "succeeded" && job.result !== undefined;
+}
+
+function findComparableJobs(jobs: Map<string, Job>): [Job, Job] | undefined {
+  const completed = [...jobs.values()].filter(isComparableJob).sort(byNewestJob);
+  for (let currentIndex = 0; currentIndex < completed.length; currentIndex += 1) {
+    const current = completed[currentIndex]!;
+    const key = comparisonKey(current);
+    const previous = completed.slice(currentIndex + 1).find((job) => comparisonKey(job) === key);
+    if (previous) return [previous, current];
+  }
+  return undefined;
+}
+
 export function createPanelServer(options: PanelOptions = {}) {
   const panelCwd = path.resolve(options.cwd ?? process.cwd());
   const allowedRoots = (options.allowedRoots?.length ? options.allowedRoots : [panelCwd]).map((root) => path.resolve(root));
@@ -200,8 +247,9 @@ export function createPanelServer(options: PanelOptions = {}) {
   const scanRunner = options.scanRunner ?? scan;
   const aiAnalyzer = options.aiAnalyzer ?? aiAnalyzerFromEnvironment();
   let activeJobs = 0;
+  let nextJobSequence = 0;
   const trimJobs = (): void => {
-    const completed = [...jobs.values()].filter((job) => !["queued", "running"].includes(job.status)).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    const completed = [...jobs.values()].filter((job) => !["queued", "running"].includes(job.status)).sort((a, b) => a.sequence - b.sequence);
     while (jobs.size >= maxRetainedJobs && completed.length) jobs.delete(completed.shift()!.id);
   };
   const schedule = (): void => {
@@ -277,12 +325,13 @@ export function createPanelServer(options: PanelOptions = {}) {
           id,
           status: "queued",
           createdAt: new Date().toISOString(),
+          sequence: nextJobSequence++,
           cwd,
           scanCwd: target.scanCwd,
           targetKind: target.kind,
           includeTests,
           ...(dependencyAudit ? { dependencyAudit } : {}),
-          ...(target.include ? { include: target.include } : {}),
+          include,
           ...(target.cleanupPath ? { cleanupPath: target.cleanupPath } : {}),
           reportsDir: taskReportsDir,
           tools: requestedTools,
@@ -295,7 +344,7 @@ export function createPanelServer(options: PanelOptions = {}) {
         json(res, publicJob(job), 202); return;
       }
       if (req.method === "GET" && url.pathname === "/api/scans") {
-        const list = [...jobs.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((job) => ({ id: job.id, target: publicTarget(job), targetKind: job.targetKind, status: job.status, createdAt: job.createdAt, totalFiles: job.totalFiles }));
+        const list = [...jobs.values()].sort(byNewestJob).map((job) => ({ id: job.id, target: publicTarget(job), targetKind: job.targetKind, status: job.status, createdAt: job.createdAt, totalFiles: job.totalFiles }));
         json(res, { jobs: list });
         return;
       }
@@ -307,9 +356,23 @@ export function createPanelServer(options: PanelOptions = {}) {
         json(res, { languages, include: includePatternsForLanguages(languages) }); return;
       }
       if (req.method === "GET" && url.pathname === "/api/diff") {
-        const all = [...jobs.values()].filter((job) => job.result).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-        if (all.length < 2) { json(res, { added: [], fixed: [], unchanged: [], message: "至少需要两次成功扫描" }); return; }
-        json(res, diffScanResults(all[1]!.result!, all[0]!.result!)); return;
+        const baseJobId = url.searchParams.get("baseJobId");
+        const currentJobId = url.searchParams.get("currentJobId");
+        let pair: [Job, Job] | undefined;
+        if (baseJobId || currentJobId) {
+          if (!baseJobId || !currentJobId) { json(res, { error: "必须同时指定 baseJobId 和 currentJobId" }, 400); return; }
+          if (baseJobId === currentJobId) { json(res, { error: "基线任务和当前任务必须是两次不同扫描" }, 400); return; }
+          const base = jobs.get(baseJobId);
+          const current = jobs.get(currentJobId);
+          if (!base || !current) { json(res, { error: "指定任务不存在" }, 404); return; }
+          if (!isComparableJob(base) || !isComparableJob(current)) { json(res, { error: "只能比较两次成功扫描" }, 400); return; }
+          if (comparisonKey(base) !== comparisonKey(current)) { json(res, { error: "只能比较相同目标和扫描配置的任务" }, 400); return; }
+          pair = [base, current];
+        } else {
+          pair = findComparableJobs(jobs);
+        }
+        if (!pair) { json(res, { added: [], fixed: [], unchanged: [], message: "至少需要两次成功扫描，且目标和配置必须相同" }); return; }
+        json(res, diffScanResults(pair[0].result!, pair[1].result!)); return;
       }
       const aiMatch = url.pathname.match(/^\/api\/scans\/([^/]+)\/findings\/([^/]+)\/ai-analysis$/);
       if (req.method === "POST" && aiMatch) {
@@ -397,9 +460,12 @@ export function createPanelServer(options: PanelOptions = {}) {
         if (guard.startsWith("..") || path.isAbsolute(guard)) { json(res, { error: "路径越界" }, 403); return; }
         let content: string;
         try {
-          const info = await stat(absolute);
+          const realFile = await realpath(absolute);
+          if (!isWithin(root, realFile)) { json(res, { error: "文件实际路径超出本任务的扫描目录" }, 403); return; }
+          const info = await stat(realFile);
+          if (!info.isFile()) { json(res, { error: "请求路径不是普通文件" }, 400); return; }
           if (info.size > 512 * 1024) { json(res, { error: "文件超过 512KB，请在本地编辑器中查看" }, 413); return; }
-          content = await readFile(absolute, "utf8");
+          content = await readFile(realFile, "utf8");
         } catch { json(res, { error: "文件已不可访问（压缩包扫描的临时目录可能已清理，请重新扫描该压缩包）" }, 410); return; }
         const lines = content.split("\n");
         const truncated = lines.length > 2_000;
@@ -412,7 +478,11 @@ export function createPanelServer(options: PanelOptions = {}) {
       }
       if (req.method === "GET" && url.pathname.startsWith("/api/scans/")) { const job = jobs.get(url.pathname.split("/").pop() ?? ""); if (!job) { json(res, { error: "任务不存在" }, 404); return; } json(res, publicJob(job)); return; }
       json(res, { error: "Not found" }, 404);
-    } catch (error) { console.error("[panel] 请求处理失败:", error); json(res, { error: "请求处理失败", code: "INTERNAL_ERROR" }, 500); }
+    } catch (error) {
+      if (error instanceof RequestBodyError) { json(res, { error: error.message, code: "INVALID_REQUEST_BODY" }, error.status); return; }
+      console.error("[panel] 请求处理失败:", error);
+      json(res, { error: "请求处理失败", code: "INTERNAL_ERROR" }, 500);
+    }
   });
   return { server, reportsDir };
 }
@@ -443,7 +513,7 @@ async function runJob(job: Job, scanRunner: typeof scan): Promise<void> {
       modules,
       moduleIds,
     });
-    job.status = job.result.status === "failed" ? "failed" : job.result.scannedFiles === 0 ? "no-files" : job.result.status === "partial" ? "partial" : "succeeded";
+    job.status = job.result.status === "failed" ? "failed" : job.result.status === "partial" ? "partial" : job.result.scannedFiles === 0 ? "no-files" : "succeeded";
     if (job.status === "failed") job.error = job.result.diagnostics.map((item) => item.message).join("; ") || "扫描失败";
     if (job.status === "partial") job.error = "扫描部分完成，请检查诊断信息和报告";
     if (job.status === "no-files") job.error = "没有找到受支持的源码或配置文件，实际检查 0 个文件";

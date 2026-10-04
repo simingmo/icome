@@ -99,6 +99,7 @@ export function summarize(findings: Finding[]): ScanSummary {
 }
 
 export async function scan(options: ScanOptions): Promise<ScanResult> {
+  options.signal?.throwIfAborted();
   const startedAt = performance.now();
   const startedAtIso = new Date().toISOString();
   const cwd = path.resolve(options.cwd);
@@ -146,6 +147,7 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
   const collectDiscovered = async (suppressErrors: boolean): Promise<void> => {
     const discovery = fg.stream(options.include ?? DEFAULT_INCLUDE, { ...discoveryOptions, suppressErrors });
     for await (const entry of discovery as AsyncIterable<string | Buffer>) {
+      options.signal?.throwIfAborted();
       discoveredFiles.push(String(entry));
       if (discoveredFiles.length > maxFiles) {
         throw new Error(`扫描文件数量超过安全限制（最多 ${maxFiles} 个）`);
@@ -172,6 +174,7 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
   };
 
   for (const relativePath of discoveredFiles.sort()) {
+    options.signal?.throwIfAborted();
     trackLanguage(relativePath, "discovered");
     const absolutePath = path.resolve(cwd, relativePath);
     try {
@@ -213,15 +216,18 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
       trackLanguage(relativePath, "scanned");
       const context = toContext(cwd, relativePath, source);
       for (const rule of selectedRules) {
-        if (!rule.supports(context)) continue;
+        options.signal?.throwIfAborted();
         try {
+          if (!rule.supports(context)) continue;
           const ruleFindings = await rule.scan(context);
           findings.push(...ruleFindings);
         } catch (error) {
+          if (options.signal?.aborted) throw options.signal.reason;
           diagnostics.push({ code: "RULE_SCAN_FAILED", level: "error", phase: "rule", message: `规则执行失败：${rule.id}（${relativePath}）`, ruleId: rule.id, recoverable: true, details: { file: relativePath, reason: error instanceof Error ? error.name : "UnknownError" } });
         }
       }
     } catch (error) {
+      if (options.signal?.aborted) throw options.signal.reason;
       if (error instanceof Error && error.message.startsWith("扫描文件总大小超过安全限制")) throw error;
       failedFiles.add(relativePath);
       trackLanguage(relativePath, "failed");
@@ -233,8 +239,13 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
   const externalScannerStatuses = new Map<string, "succeeded" | "partial" | "failed">();
   let externalScannerIncomplete = false;
   for (const externalScanner of externalScanners) {
+    options.signal?.throwIfAborted();
     try {
-      const result = await externalScanner.scan({ cwd, files: files.map((file) => file.replaceAll("\\", "/")) });
+      const result = await externalScanner.scan({
+        cwd,
+        files: files.map((file) => file.replaceAll("\\", "/")),
+        ...(options.signal ? { signal: options.signal } : {}),
+      });
       externalScannerStatuses.set(externalScanner.id, result.status ?? "succeeded");
       findings.push(...result.findings);
       externalRuleIds.push(...(result.executedRules ?? result.findings.map((finding) => finding.ruleId)));
@@ -246,6 +257,7 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
         if (stage) stage.status = "partial";
       }
     } catch (error) {
+      if (options.signal?.aborted) throw options.signal.reason;
       diagnostics.push({
         code: "EXTERNAL_SCANNER_FAILED",
         level: "error",
@@ -327,6 +339,7 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
 
 export interface MultiScanOptions extends Omit<ScanOptions, "cwd"> {
   roots: readonly string[];
+  maxConcurrency?: number;
 }
 
 function combineStatus(results: readonly ScanResult[]): ScanResult["status"] {
@@ -395,7 +408,23 @@ export function mergeScanResults(roots: readonly string[], results: readonly Sca
 }
 
 export async function scanRoots(options: MultiScanOptions): Promise<ScanResult> {
-  const results: ScanResult[] = [];
-  for (const root of options.roots) results.push(await scan({ ...options, cwd: root }));
+  if (!options.roots.length) throw new Error("扫描根目录不能为空");
+  const maxConcurrency = Math.trunc(options.maxConcurrency ?? 2);
+  if (!Number.isSafeInteger(maxConcurrency) || maxConcurrency <= 0) throw new RangeError("maxConcurrency 必须是正整数。");
+  options.signal?.throwIfAborted();
+
+  const results = new Array<ScanResult>(options.roots.length);
+  let nextIndex = 0;
+  const worker = async (): Promise<void> => {
+    while (nextIndex < options.roots.length) {
+      options.signal?.throwIfAborted();
+      const index = nextIndex;
+      nextIndex += 1;
+      const root = options.roots[index]!;
+      results[index] = await scan({ ...options, cwd: root });
+    }
+  };
+  const workerCount = Math.min(maxConcurrency, options.roots.length);
+  await Promise.all(Array.from({ length: workerCount }, worker));
   return mergeScanResults(options.roots, results);
 }
