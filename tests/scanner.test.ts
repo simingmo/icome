@@ -2,7 +2,8 @@ import { mkdtemp, mkdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import type { ScannerModule, ScannerPlugin } from "../src/contracts.js";
+import type { ModuleRegistry, ScannerModule, ScannerPlugin } from "../src/contracts.js";
+import { ScannerModuleRegistry } from "../src/module-registry.js";
 import { patternRule } from "../src/rule-utils.js";
 import { mergeScanResults, scan, scanRoots } from "../src/scanner.js";
 
@@ -162,6 +163,33 @@ describe("scan", () => {
     expect(result.status).toBe("partial");
     expect(result.stages?.find((stage) => stage.phase === "external-scanner")?.status).toBe("partial");
     expect(result.modules?.find((item) => item.id === module.id)?.status).toBe("failed");
+  });
+
+  it("合并多根目录时保留同一模块的失败状态和阶段根目录", async () => {
+    const first = await fixture({ "src/app.ts": "const safe = true;\n" });
+    const second = await fixture({ "src/app.ts": "const safe = true;\n" });
+    const module: ScannerModule = {
+      id: "test/multi-root",
+      version: "1.0.0",
+      rules: [],
+      scanners: [{ id: "test/multi-root-scanner", version: "1.0.0", async scan(context) {
+        if (context.cwd === first) return { findings: [], status: "failed" };
+        return { findings: [], status: "succeeded" };
+      } }],
+    };
+    const result = await scanRoots({ roots: [first, second], modules: [module], moduleIds: [module.id] });
+    expect(result.modules?.find((item) => item.id === module.id)?.status).toBe("failed");
+    expect(result.stages?.filter((stage) => stage.phase === "external-scanner").map((stage) => stage.root)).toEqual([first, second]);
+  });
+
+  it("同一个 registry 可以重复执行扫描且不被扫描配置污染", async () => {
+    const cwd = await fixture({ "src/app.ts": "const safe = true;\n" });
+    const registry: ModuleRegistry = new ScannerModuleRegistry();
+    const before = { modules: registry.listModules(), presets: registry.listPresets() };
+    await scan({ cwd, registry });
+    await expect(scan({ cwd, registry })).resolves.toMatchObject({ status: "succeeded" });
+    expect(registry.listModules()).toEqual(before.modules);
+    expect(registry.listPresets()).toEqual(before.presets);
   });
 
   it("拒绝重复规则 ID", async () => {

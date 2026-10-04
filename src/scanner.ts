@@ -333,6 +333,10 @@ function combineStatus(results: readonly ScanResult[]): ScanResult["status"] {
   return results.some((result) => result.status === "failed") ? "failed" : results.some((result) => result.status === "partial") ? "partial" : "succeeded";
 }
 
+function combineModuleStatus(statuses: readonly ScanModuleReport["status"][]): ScanModuleReport["status"] {
+  return statuses.includes("failed") ? "failed" : statuses.includes("partial") ? "partial" : "succeeded";
+}
+
 export function mergeScanResults(roots: readonly string[], results: readonly ScanResult[]): ScanResult {
   if (!roots.length || roots.length !== results.length) throw new Error("扫描根目录与扫描结果数量不一致");
   const findings = results.flatMap((result, index) => {
@@ -353,7 +357,21 @@ export function mergeScanResults(roots: readonly string[], results: readonly Sca
     }
     return total;
   }, { discoveredFiles: 0, scannedFiles: 0, skippedFiles: 0, failedFiles: 0, scannedBytes: 0, byLanguage: {} });
-  const modules = [...new Map(results.flatMap((result) => result.modules ?? []).map((module) => [module.id, module])).values()];
+  const moduleGroups = new Map<string, ScanModuleReport[]>();
+  for (const result of results) {
+    for (const module of result.modules ?? []) {
+      const group = moduleGroups.get(module.id) ?? [];
+      group.push(module);
+      moduleGroups.set(module.id, group);
+    }
+  }
+  const modules = [...moduleGroups.entries()].map(([id, group]) => ({
+    id,
+    version: group[0]!.version,
+    status: combineModuleStatus(group.map((module) => module.status)),
+    rules: [...new Set(group.flatMap((module) => module.rules))].sort(),
+    externalScanners: [...new Set(group.flatMap((module) => module.externalScanners))].sort(),
+  }));
   const first = results[0]!;
   return {
     schemaVersion: first.schemaVersion,
@@ -368,7 +386,10 @@ export function mergeScanResults(roots: readonly string[], results: readonly Sca
     ...(first.metadata ? { metadata: { ...first.metadata, target: roots.join(", "), roots: [...roots] } } : {}),
     coverage,
     scannedFileList: results.flatMap((result, index) => (result.scannedFileList ?? []).map((file) => (roots.length > 1 ? `${roots[index]}::${file}` : file))),
-    stages: results.flatMap((result) => result.stages ?? []),
+    stages: results.flatMap((result, index) => (result.stages ?? []).map((stage) => ({
+      ...stage,
+      ...(roots[index] ? { root: roots[index] } : {}),
+    }))),
     modules,
   };
 }

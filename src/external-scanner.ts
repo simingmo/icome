@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
-import { spawn } from "node:child_process";
 import path from "node:path";
+import { commandFailureMessage, runCommand } from "./command-runner.js";
 import type { Confidence, Finding, RuleCategory, ScanDiagnostic, Severity, StandardReference } from "./contracts.js";
 
 export interface ProjectScanContext {
@@ -47,7 +47,6 @@ export interface CommandScannerOptions {
 const severities = new Set<Severity>(["info", "low", "medium", "high", "critical"]);
 const confidences = new Set<Confidence>(["low", "medium", "high"]);
 const categories = new Set<RuleCategory>(["security", "testing", "configuration", "dependency", "process"]);
-const MAX_TOOL_OUTPUT_BYTES = 16 * 1024 * 1024;
 
 function fingerprint(parts: readonly unknown[]): string {
   return createHash("sha256").update(JSON.stringify(parts)).digest("hex");
@@ -112,65 +111,23 @@ function parseRecords(stdout: string): ExternalToolRecord[] {
   });
 }
 
-function forceKill(child: { kill(signal?: NodeJS.Signals | number): boolean }): void {
-  for (const signal of ["SIGKILL", "SIGTERM"] as const) {
-    try { if (!child.kill(signal)) return; } catch { return; }
-  }
-}
-
-async function runCommand(options: CommandScannerOptions, context: ProjectScanContext): Promise<string> {
-  return await new Promise((resolve, reject) => {
-    const args = (options.args ?? []).map((arg) => arg.replaceAll("{cwd}", context.cwd));
-    // Windows 上 .cmd/.bat 需要经由 shell 才能被 spawn（Node 安全限制），参数仅来自模块配置
-    const needsShell = process.platform === "win32" && /\.(cmd|bat)$/i.test(options.command);
-    const child = spawn(options.command, args, {
+async function executeCommand(options: CommandScannerOptions, context: ProjectScanContext): Promise<string> {
+  const timeoutMs = options.timeoutMs ?? 120_000;
+  let result;
+  try {
+    result = await runCommand({
+      command: options.command,
+      args: (options.args ?? []).map((arg) => arg.replaceAll("{cwd}", context.cwd)),
       cwd: context.cwd,
-      env: { ...process.env, ...options.environment },
-      shell: needsShell,
-      windowsHide: true,
+      timeoutMs,
+      ...(options.environment ? { environment: options.environment } : {}),
     });
-    let stdout = "";
-    let stderr = "";
-    let settled = false;
-    let timedOut = false;
-    const finish = (action: () => void): void => {
-      if (settled) return;
-      settled = true;
-      action();
-    };
-    const timeoutMs = options.timeoutMs ?? 120_000;
-    const timer = setTimeout(() => {
-      timedOut = true;
-      child.kill();
-    }, timeoutMs);
-    const hardKill = setTimeout(() => {
-      if (!settled) forceKill(child);
-    }, timeoutMs + 5_000);
-    child.stdout.setEncoding("utf8");
-    child.stderr.setEncoding("utf8");
-    child.stdout.on("data", (chunk: string) => {
-      stdout += chunk;
-      if (Buffer.byteLength(stdout) > MAX_TOOL_OUTPUT_BYTES) { child.kill(); finish(() => reject(new Error(`外部扫描器 ${options.id} 输出超过 16 MB 安全限制。`))); }
-    });
-    child.stderr.on("data", (chunk: string) => {
-      stderr += chunk;
-      if (Buffer.byteLength(stderr) > MAX_TOOL_OUTPUT_BYTES) { child.kill(); finish(() => reject(new Error(`外部扫描器 ${options.id} 错误输出超过 16 MB 安全限制。`))); }
-    });
-    child.on("error", (error) => {
-      clearTimeout(timer);
-      clearTimeout(hardKill);
-      finish(() => reject(new Error(`无法启动外部扫描器 ${options.id}：${error.message}`)));
-    });
-    child.on("close", (code) => {
-      clearTimeout(timer);
-      clearTimeout(hardKill);
-      finish(() => {
-        if (timedOut) reject(new Error(`外部扫描器 ${options.id} 超时（${timeoutMs}ms）。`));
-        else if (code !== 0) reject(new Error(`外部扫描器 ${options.id} 退出码 ${code ?? "unknown"}：${stderr.trim()}`));
-        else resolve(stdout);
-      });
-    });
-  });
+  } catch (error) {
+    throw new Error(`无法启动外部扫描器 ${options.id}：${error instanceof Error ? error.message : String(error)}`);
+  }
+  const failure = commandFailureMessage(options.id, result, timeoutMs);
+  if (failure) throw new Error(failure);
+  return result.stdout;
 }
 
 export function createCommandScanner(options: CommandScannerOptions): ExternalScanner {
@@ -178,7 +135,7 @@ export function createCommandScanner(options: CommandScannerOptions): ExternalSc
     id: options.id,
     version: options.version ?? "external",
     async scan(context) {
-      const stdout = await runCommand(options, context);
+      const stdout = await executeCommand(options, context);
       const findings = parseRecords(stdout).map((record) => normalizeRecord(options.id, context.cwd, record));
       return { findings, executedRules: [...new Set(findings.map((finding) => finding.ruleId))] };
     },

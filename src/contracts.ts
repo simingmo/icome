@@ -135,6 +135,7 @@ export interface ScanCoverage {
 export interface ScanStage {
   phase: ScanDiagnostic["phase"];
   status: "succeeded" | "partial" | "failed" | "skipped";
+  root?: string;
   durationMs?: number;
   message?: string;
 }

@@ -25,7 +25,9 @@ function mergeRules(preset: RuleSelection | undefined, explicit: RuleSelection |
 }
 
 export function resolveScanConfiguration(options: ScanOptions): ResolvedScanConfiguration {
-  const registry = options.registry ?? new ScannerModuleRegistry();
+  const registry = new ScannerModuleRegistry();
+  for (const module of options.registry?.listModules() ?? []) registry.registerModule(module);
+  for (const preset of options.registry?.listPresets() ?? []) registry.registerPreset(preset);
   const registered = new Set(registry.listModules().map((module) => module.id));
   for (const module of builtinModules) if (!registered.has(module.id)) registry.registerModule(module);
   const presetIds = new Set(registry.listPresets().map((preset) => preset.id));
