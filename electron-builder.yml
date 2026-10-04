@@ -1,0 +1,16 @@
+appId: com.lego.security.scanner
+productName: LEGO Security Scanner
+files:
+  - dist/**/*
+  - desktop/main.cjs
+  - package.json
+extraResources:
+  - from: tools
+    to: tools
+win:
+  target:
+    - nsis
+    - portable
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

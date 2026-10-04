@@ -1,0 +1,29 @@
+node_modules/
+dist/
+coverage/
+*.log
+.scan-reports/
+
+# Generated scan output
+reports*.json
+*-report.json
+report.json
+whole-computer-report.json
+test-report.json
+test-results-*.json
+
+# Bundled runtimes and third-party tools
+*.zip
+*.rar
+*.exe
+*.dll
+*.pdb
+tools/php/
+tools/seay/
+tools/vcg-app/
+
+# Nested worktrees
+icome/
+icome-1/
+tools/vcg/
+tools/rips/
