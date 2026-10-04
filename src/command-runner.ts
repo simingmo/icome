@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import crossSpawn from "cross-spawn";
 
 export interface CommandRunOptions {
   command: string;
@@ -19,61 +19,80 @@ export interface CommandRunResult {
 
 const DEFAULT_TIMEOUT_MS = 120_000;
 const DEFAULT_MAX_OUTPUT_BYTES = 16 * 1024 * 1024;
+const FORCE_KILL_DELAY_MS = 5_000;
 
-function killProcess(child: { kill(signal?: NodeJS.Signals | number): boolean }): void {
-  for (const signal of ["SIGTERM", "SIGKILL"] as const) {
-    try {
-      if (!child.kill(signal)) return;
-    } catch {
-      return;
-    }
+function validatePositiveInteger(name: string, value: number): void {
+  if (!Number.isSafeInteger(value) || value <= 0) throw new RangeError(`${name} 必须是正整数。`);
+}
+
+function killProcess(child: { kill(signal?: NodeJS.Signals | number): boolean }, signal: NodeJS.Signals): void {
+  try {
+    child.kill(signal);
+  } catch {
+    // Process may already have exited between the state check and signal delivery.
   }
 }
 
 export async function runCommand(options: CommandRunOptions): Promise<CommandRunResult> {
+  const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const maxOutputBytes = options.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES;
+  validatePositiveInteger("timeoutMs", timeoutMs);
+  validatePositiveInteger("maxOutputBytes", maxOutputBytes);
+  if (!options.command.trim()) throw new Error("command 不能为空。");
+
   return await new Promise((resolve, reject) => {
-    const needsShell = process.platform === "win32" && /\.(cmd|bat)$/i.test(options.command);
-    const child = spawn(options.command, [...(options.args ?? [])], {
+    const child = crossSpawn(options.command, [...(options.args ?? [])], {
       cwd: options.cwd,
       env: { ...process.env, ...options.environment },
-      shell: needsShell,
+      stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
     });
-    const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-    const maxOutputBytes = options.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES;
+    const stdoutStream = child.stdout;
+    const stderrStream = child.stderr;
+    if (!stdoutStream || !stderrStream) {
+      killProcess(child, "SIGTERM");
+      reject(new Error("无法捕获命令输出。"));
+      return;
+    }
     let stdout = "";
     let stderr = "";
     let settled = false;
     let timedOut = false;
+    let hardKill: NodeJS.Timeout | undefined;
     let outputLimitExceeded: CommandRunResult["outputLimitExceeded"];
     const finish = (action: () => void): void => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      clearTimeout(hardKill);
+      if (hardKill) clearTimeout(hardKill);
       action();
+    };
+    const terminate = (): void => {
+      killProcess(child, "SIGTERM");
+      hardKill ??= setTimeout(() => {
+        if (!settled) killProcess(child, "SIGKILL");
+      }, FORCE_KILL_DELAY_MS);
+      hardKill.unref();
     };
     const timer = setTimeout(() => {
       timedOut = true;
-      child.kill();
+      terminate();
     }, timeoutMs);
-    const hardKill = setTimeout(() => {
-      if (!settled) killProcess(child);
-    }, timeoutMs + 5_000);
+    timer.unref();
     const append = (current: string, chunk: string, stream: "stdout" | "stderr"): string => {
       if (outputLimitExceeded) return current;
       const next = current + chunk;
       if (Buffer.byteLength(next, "utf8") <= maxOutputBytes) return next;
       outputLimitExceeded = stream;
-      killProcess(child);
+      terminate();
       return current;
     };
-    child.stdout.setEncoding("utf8");
-    child.stderr.setEncoding("utf8");
-    child.stdout.on("data", (chunk: string) => {
+    stdoutStream.setEncoding("utf8");
+    stderrStream.setEncoding("utf8");
+    stdoutStream.on("data", (chunk: string) => {
       stdout = append(stdout, chunk, "stdout");
     });
-    child.stderr.on("data", (chunk: string) => {
+    stderrStream.on("data", (chunk: string) => {
       stderr = append(stderr, chunk, "stderr");
     });
     child.on("error", (error) => finish(() => reject(error)));
